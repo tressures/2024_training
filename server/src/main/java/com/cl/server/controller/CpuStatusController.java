@@ -3,7 +3,6 @@ package com.cl.server.controller;
 import com.cl.server.entity.CpuStatus;
 import com.cl.server.entity.CpuStatusResp;
 import com.cl.server.entity.Result;
-import com.cl.server.entity.Values;
 import com.cl.server.service.CpuStatusService;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
