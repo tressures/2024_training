@@ -3,7 +3,6 @@ package com.cl.collector.service.impl;
 import com.cl.collector.service.StatusCollectorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;

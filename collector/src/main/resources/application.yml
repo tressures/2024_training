@@ -10,6 +10,6 @@ xxl:
       appname: collector
       address:
       ip: 117.72.68.247
-      port: 6666
+      port: 9999
       logpath: /data/applogs/xxl-job/jobhandler
       logretentiondays: 30
