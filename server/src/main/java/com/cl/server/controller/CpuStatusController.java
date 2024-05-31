@@ -1,7 +1,7 @@
 package com.cl.server.controller;
 
 import com.cl.server.entity.CpuStatus;
-import com.cl.server.entity.CpuStatusResp;
+import com.cl.server.entity.StatusResp;
 import com.cl.server.entity.Result;
 import com.cl.server.service.CpuStatusService;
 import com.google.common.base.Preconditions;
@@ -43,7 +43,7 @@ public class CpuStatusController {
             Preconditions.checkNotNull(endpoint,"机器名称不能为空");
             Preconditions.checkNotNull(start_ts,"起始时间不能为空");
             Preconditions.checkNotNull(end_ts,"结束时间不能为空");
-            List<CpuStatusResp> list = cpuStatusService.queryMetrics(endpoint,metric,start_ts,end_ts);
+            List<StatusResp> list = cpuStatusService.queryMetrics(endpoint,metric,start_ts,end_ts);
             return Result.ok(list);
         }catch (Exception e){
             return Result.fail(e.getMessage());

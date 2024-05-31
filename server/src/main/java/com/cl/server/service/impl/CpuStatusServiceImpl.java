@@ -1,10 +1,11 @@
 package com.cl.server.service.impl;
 
 import com.cl.server.entity.CpuStatus;
-import com.cl.server.entity.CpuStatusResp;
+import com.cl.server.entity.StatusResp;
 import com.cl.server.entity.Values;
 import com.cl.server.mapper.CpuStatusDao;
 import com.cl.server.service.CpuStatusService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.apache.commons.collections4.CollectionUtils;
 import javax.annotation.Resource;
@@ -12,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * (CpuStatus)表服务实现类
@@ -21,6 +21,7 @@ import java.util.stream.Stream;
  * @date:  2024-05-26 17:06:02
  */
 @Service("cpuStatusService")
+@Slf4j
 public class CpuStatusServiceImpl implements CpuStatusService {
     @Resource
     private CpuStatusDao cpuStatusDao;
@@ -32,13 +33,13 @@ public class CpuStatusServiceImpl implements CpuStatusService {
     }
 
     @Override
-        public List<CpuStatusResp> queryMetrics(String endpoint, String metric, Long start_ts, Long end_ts) {
+        public List<StatusResp> queryMetrics(String endpoint, String metric, Long start_ts, Long end_ts) {
         //根据机器及指标查出所有
         CpuStatus cpuStatus = new CpuStatus();
         cpuStatus.setEndpoint(endpoint);
         cpuStatus.setMetric(metric);
         List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByLimit(cpuStatus);
-        List<CpuStatusResp> cpuStatusRespList = new ArrayList<>();
+        List<StatusResp> statusRespList = new ArrayList<>();
         if(CollectionUtils.isNotEmpty(cpuStatusList)) {
             //过滤不符合时间段的
             List<CpuStatus> cpuStatuses = cpuStatusList.stream()
@@ -57,12 +58,12 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                             return value;
                         })
                         .collect(Collectors.toList());
-                CpuStatusResp cpuStatusResp = new CpuStatusResp();
-                cpuStatusResp.setMetric(key);
-                cpuStatusResp.setValues(values);
-                cpuStatusRespList.add(cpuStatusResp);
+                StatusResp statusResp = new StatusResp();
+                statusResp.setMetric(key);
+                statusResp.setValues(values);
+                statusRespList.add(statusResp);
             }
         }
-        return cpuStatusRespList;
+        return statusRespList;
     }
 }

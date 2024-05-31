@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class CpuStatusResp {
+public class StatusResp {
 
     private String metric;
 
