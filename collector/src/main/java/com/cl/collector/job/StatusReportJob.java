@@ -6,6 +6,8 @@ import com.cl.collector.service.StatusCollectorService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 
+@Component
 @Slf4j
 public class StatusReportJob {
     private static final String TO_SERVER_URL = "http://117.72.68.247:8888/api/metric/upload";
