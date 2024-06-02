@@ -1,6 +1,7 @@
 package com.cl.server.mapper;
 
 import com.cl.server.entity.CpuStatus;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 
@@ -12,6 +13,7 @@ import java.util.List;
  * @author tressures
  * @date:  2024-05-26 17:05:56
  */
+@Mapper
 public interface CpuStatusDao {
 
     /**

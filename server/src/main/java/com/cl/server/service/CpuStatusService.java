@@ -1,7 +1,8 @@
 package com.cl.server.service;
 
 import com.cl.server.entity.CpuStatus;
-import com.cl.server.entity.StatusResp;
+import com.cl.server.entity.DTO.StatusQueryDTO;
+import com.cl.server.entity.VO.StatusResp;
 
 
 import java.util.List;
@@ -16,6 +17,6 @@ public interface CpuStatusService {
 
     void uploadMetrics(List<CpuStatus> cpuStatusList);
 
-    List<StatusResp> queryMetrics(String endpoint, String metric, Long start_ts, Long end_ts);
+    List<StatusResp> queryMetrics(StatusQueryDTO statusQueryDTO);
 
 }
