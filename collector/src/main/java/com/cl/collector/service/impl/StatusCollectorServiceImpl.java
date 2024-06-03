@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 
 @Service("statusCollectorService")
 @Slf4j
@@ -15,38 +14,46 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
 
     @Override
     public Double getCpuUsage() throws IOException {
-        FileReader fileReader = new FileReader("/proc/stat");
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        BufferedReader reader = new BufferedReader(new FileReader("/proc/stat"));
+        long idlePart = 0,totalPart = 0;
         String line;
-        long totalTime = 0;
-        long idleTime = 0;
-        while ((line = bufferedReader.readLine()) != null) {
+        while ((line = reader.readLine()) != null) {
             if (line.startsWith("cpu ")) {
-                String[] tokens = line.split("\\s+");
-                totalTime = Arrays.stream(tokens)
-                        .skip(1)
-                        .mapToLong(Long::parseLong)
-                        .sum();
-                idleTime = Long.parseLong(tokens[4]);
+                String[] parts = line.trim().split(" ");
+                long user = Long.parseLong(parts[0]);
+                long nice = Long.parseLong(parts[1]);
+                long sys = Long.parseLong(parts[2]);
+                long idle = Long.parseLong(parts[3]);
+                long total = user + nice + sys + idle;
+                idlePart=idle;
+                totalPart=total;
+                break;
             }
         }
-        return Double.parseDouble(String.format("%.2f", 100 * (totalTime - idleTime)*1.0 / totalTime));
+        return Double.parseDouble(String.format("%.2f",100 * idlePart*1.0 / totalPart));
     }
 
     @Override
     public Double getMemUsage() throws IOException {
-        FileReader fileReader = new FileReader("/proc/meminfo");
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line;
-        long totalMemory = 0;
-        long freeMemory = 0;
-        while ((line = bufferedReader.readLine()) != null) {
-            if (line.startsWith("MemTotal:")) {
-                totalMemory = Long.parseLong(line.split("\\s+")[1]);
-            } else if (line.startsWith("MemFree:")) {
-                freeMemory = Long.parseLong(line.split("\\s+")[1]);
+        double memoryUtilization = 0;
+        BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"));
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("MemTotal: ")) {
+                String[] parts = line.trim().split(": ");
+                if (parts.length > 1) {
+                    long totalMemory = Long.parseLong(parts[1].trim());
+                    reader.readLine(); // Skip the next line
+                    line = reader.readLine();
+                    parts = line.trim().split(": ");
+                    if (parts.length > 1) {
+                        long freeMemory = Long.parseLong(parts[1].trim());
+                        memoryUtilization = (1 - (freeMemory / (double) totalMemory)) * 100;
+                        break;
+                    }
+                }
             }
         }
-        return Double.parseDouble(String.format("%.2f",100 * (totalMemory - freeMemory)*1.0 / totalMemory));
+        return Double.parseDouble(String.format("%.2f",memoryUtilization));
     }
 }
