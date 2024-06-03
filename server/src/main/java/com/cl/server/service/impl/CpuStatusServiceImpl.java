@@ -75,7 +75,8 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             //查Redis
             String key = redisUtil.buildKey(statusQueryDTO.getEndPoint()+statusQueryDTO.getMetric());
             Set<String> members = redisUtil.rangeByScore(key,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
-            Long time=Long.MIN_VALUE;
+
+            Long timeEnd=Long.MIN_VALUE;
             if(CollectionUtils.isNotEmpty(members)){
                 //包装data
                 for(String item : members){
@@ -89,37 +90,32 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                     Values values = new Values(timeStamp,value);
                     valueList.add(values);
                     //找出Redis中最老的时间
-                    if(time<timeStamp) time=timeStamp;
+                    if(timeEnd<timeStamp) timeEnd=timeStamp;
                 }
             }
+
+            //先查出Redis中符合的数据，再根据Redis最早的数据时间查数据库里这个时间之前所有数据
+            if(timeEnd==Long.MIN_VALUE){
+                timeEnd = statusQueryDTO.getEnd_ts();
+            }
             //查数据库
-            if(time<=statusQueryDTO.getStart_ts()){
+            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
+                    ,statusQueryDTO.getStart_ts(),timeEnd);
+            if(CollectionUtils.isNotEmpty(cpuStatusList)) {
+                //包装data
+                List<Values> values = cpuStatusList.stream().map(item -> {
+                    Values value = new Values();
+                    value.setTimeStamp(item.getTimestamp());
+                    value.setValue(item.getValue());
+                    return value;
+                }).collect(Collectors.toList());
+                valueList.addAll(values);
                 statusResp.setMetric(statusQueryDTO.getMetric());
                 statusResp.setValues(valueList);
                 statusRespList.add(statusResp);
-                return statusRespList;
-            }else if(time>statusQueryDTO.getStart_ts()&&time<=statusQueryDTO.getEnd_ts()){
-                Long timeEnd = time;
-                List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
-                        ,statusQueryDTO.getStart_ts(),timeEnd);
-                if(CollectionUtils.isNotEmpty(cpuStatusList)) {
-                    //包装data
-                    List<Values> values = cpuStatusList.stream().map(item -> {
-                        Values value = new Values();
-                        value.setTimeStamp(item.getTimestamp());
-                        value.setValue(item.getValue());
-                        return value;
-                    }).collect(Collectors.toList());
-                    valueList.addAll(values);
-                    statusResp.setMetric(statusQueryDTO.getMetric());
-                    statusResp.setValues(valueList);
-                    statusRespList.add(statusResp);
                 }
-                return statusRespList;
-            }else{
-                throw new BaseException("服务器内部错误");
-            }
-            //查全部类型
+            return statusRespList;
+                //查全部类型
         }else{
             StatusResp cpuStatusResp = new StatusResp();
             StatusResp memStatusResp = new StatusResp();
@@ -129,7 +125,8 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             String memkey = redisUtil.buildKey(statusQueryDTO.getEndPoint()+"mem.used.percent");
             Set<String> cpuMembers = redisUtil.rangeByScore(cpukey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
             Set<String> memMembers = redisUtil.rangeByScore(memkey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
-            Long time=Long.MIN_VALUE;
+
+            Long timeEnd=Long.MIN_VALUE;
             if(CollectionUtils.isNotEmpty(cpuMembers)&&CollectionUtils.isNotEmpty(memMembers)){
                 //包装data
                 for(String item : cpuMembers){
@@ -154,51 +151,44 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                     Values values = new Values(timeStamp,value);
                     memValueList.add(values);
                     //找出Redis中最老的时间
-                    if(time<timeStamp) time=timeStamp;
+                    if(timeEnd<timeStamp) timeEnd=timeStamp;
                 }
             }
-            if(time<=statusQueryDTO.getStart_ts()){
-                cpuStatusResp.setMetric("cpu.used.percent");
-                cpuStatusResp.setValues(cpuValueList);
-                statusRespList.add(cpuStatusResp);
-                memStatusResp.setMetric("mem.used.percent");
-                memStatusResp.setValues(memValueList);
-                statusRespList.add(memStatusResp);
-                return statusRespList;
-            }else if(time>statusQueryDTO.getStart_ts()&&time<=statusQueryDTO.getEnd_ts()){
-                Long timeEnd = time;
-                List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
-                        ,statusQueryDTO.getStart_ts(),timeEnd);
-                if(CollectionUtils.isNotEmpty(cpuStatusList)) {
-                    //根据指标分组
-                    Map<String,List<CpuStatus>> map =cpuStatusList.stream()
-                            .collect(Collectors.groupingBy(CpuStatus::getMetric));
-                    //包装data
-                    for(String key:map.keySet()){
-                        List<CpuStatus> cs = map.get(key);
-                        List<Values> values = cs.stream().map(item -> {
-                            Values value = new Values();
-                            value.setTimeStamp(item.getTimestamp());
-                            value.setValue(item.getValue());
-                            return value;
-                        }).collect(Collectors.toList());
-                        if(key=="cpu.used.percent"){
-                            cpuValueList.addAll(values);
-                            cpuStatusResp.setMetric("cpu.used.percent");
-                            cpuStatusResp.setValues(cpuValueList);
-                            statusRespList.add(cpuStatusResp);
-                        }else{
-                            memValueList.addAll(values);
-                            memStatusResp.setMetric("mem.used.percent");
-                            memStatusResp.setValues(memValueList);
-                            statusRespList.add(memStatusResp);
-                        }
+            //先查出Redis中符合的数据，再根据Redis最早的数据时间查数据库里这个时间之前所有数据
+            if(timeEnd==Long.MIN_VALUE){
+                timeEnd = statusQueryDTO.getEnd_ts();
+            }
+            //查数据库
+            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
+                    ,statusQueryDTO.getStart_ts(),timeEnd);
+            if(CollectionUtils.isNotEmpty(cpuStatusList)) {
+                //根据指标分组
+                Map<String,List<CpuStatus>> map =cpuStatusList.stream()
+                        .collect(Collectors.groupingBy(CpuStatus::getMetric));
+                //包装data
+                for(String key:map.keySet()){
+                    List<CpuStatus> cs = map.get(key);
+                    List<Values> values = cs.stream().map(item -> {
+                        Values value = new Values();
+                        value.setTimeStamp(item.getTimestamp());
+                        value.setValue(item.getValue());
+                        return value;
+                    }).collect(Collectors.toList());
+                    if(key=="cpu.used.percent"){
+                        cpuValueList.addAll(values);
+                        cpuStatusResp.setMetric("cpu.used.percent");
+                        cpuStatusResp.setValues(cpuValueList);
+                        statusRespList.add(cpuStatusResp);
+                    }else{
+                        memValueList.addAll(values);
+                        memStatusResp.setMetric("mem.used.percent");
+                        memStatusResp.setValues(memValueList);
+                        statusRespList.add(memStatusResp);
                     }
                 }
-                return statusRespList;
-            }else{
-                throw new BaseException("服务器内部错误");
             }
+            return statusRespList;
         }
     }
 }
+
