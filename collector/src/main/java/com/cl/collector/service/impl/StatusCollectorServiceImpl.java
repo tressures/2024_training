@@ -20,40 +20,34 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
         while ((line = reader.readLine()) != null) {
             if (line.startsWith("cpu ")) {
                 String[] parts = line.trim().split(" ");
-                long user = Long.parseLong(parts[0]);
-                long nice = Long.parseLong(parts[1]);
-                long sys = Long.parseLong(parts[2]);
-                long idle = Long.parseLong(parts[3]);
+                long user = Long.parseLong(parts[1]);
+                long nice = Long.parseLong(parts[2]);
+                long sys = Long.parseLong(parts[3]);
+                long idle = Long.parseLong(parts[4]);
                 long total = user + nice + sys + idle;
                 idlePart=idle;
                 totalPart=total;
                 break;
             }
         }
+        reader.close();
         return Double.parseDouble(String.format("%.2f",100 * idlePart*1.0 / totalPart));
     }
 
     @Override
     public Double getMemUsage() throws IOException {
-        String line;
-        double memoryUtilization = 0;
         BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"));
+        String line;
+        long totalMemory = 0,freeMemory = 0;
         while ((line = reader.readLine()) != null) {
-            if (line.startsWith("MemTotal: ")) {
-                String[] parts = line.trim().split(": ");
-                if (parts.length > 1) {
-                    long totalMemory = Long.parseLong(parts[1].trim());
-                    reader.readLine(); // Skip the next line
-                    line = reader.readLine();
-                    parts = line.trim().split(": ");
-                    if (parts.length > 1) {
-                        long freeMemory = Long.parseLong(parts[1].trim());
-                        memoryUtilization = (1 - (freeMemory / (double) totalMemory)) * 100;
-                        break;
-                    }
-                }
+            if (line.startsWith("MemTotal:")) {
+                totalMemory = Long.parseLong(line.split("\\s+")[1]);
+            } else if (line.startsWith("MemFree:")) {
+                freeMemory = Long.parseLong(line.split("\\s+")[1]);
             }
         }
-        return Double.parseDouble(String.format("%.2f",memoryUtilization));
+        reader.close();
+        return Double.parseDouble(String.format("%.2f",100 * (totalMemory - freeMemory)*1.0 / totalMemory));
     }
 }
+
