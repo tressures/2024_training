@@ -30,7 +30,7 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
                 idleTime = Long.parseLong(tokens[4]);
             }
         }
-        return 100 * (totalTime - idleTime)*1.0 / totalTime;
+        return Double.parseDouble(String.format("%.2f", 100 * (totalTime - idleTime)*1.0 / totalTime));
     }
 
     @Override
@@ -47,6 +47,6 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
                 freeMemory = Long.parseLong(line.split("\\s+")[1]);
             }
         }
-        return 100 * (totalMemory - freeMemory)*1.0 / totalMemory;
+        return Double.parseDouble(String.format("%.2f",100 * (totalMemory - freeMemory)*1.0 / totalMemory));
     }
 }

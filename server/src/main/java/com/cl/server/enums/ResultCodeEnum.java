@@ -14,7 +14,8 @@ public enum ResultCodeEnum {
     SUCCESS(200,"ok"),
     PARAM_EMPTY(400,"参数为空"),
     PARAM_BODY_EMPTY(401,"获取指标为空"),
-    INTERNAL_SERVER_ERROR(500, "服务器内部错误!");
+    HOST_NOT_EXIST(403, "主机不存在"),
+    INTERNAL_SERVER_ERROR(500,"服务器内部错误");
 
     public int code;
 

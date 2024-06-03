@@ -2,14 +2,19 @@ package com.cl.server.service.impl;
 
 import com.cl.server.entity.CpuStatus;
 import com.cl.server.entity.DTO.StatusQueryDTO;
+import com.cl.server.entity.Result;
 import com.cl.server.entity.VO.StatusResp;
 import com.cl.server.entity.VO.Values;
+import com.cl.server.exception.BaseException;
 import com.cl.server.mapper.CpuStatusDao;
 import com.cl.server.redis.RedisUtil;
 import com.cl.server.service.CpuStatusService;
+import io.netty.util.internal.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.util.StringUtils;
+
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,55 +36,169 @@ public class CpuStatusServiceImpl implements CpuStatusService {
 
     @Override
     public void uploadMetrics(List<CpuStatus> cpuStatusList) {
-        String KEY = redisUtil.buildKey(cpuStatusList.get(0).getEndpoint());
+        String endPoint=cpuStatusList.get(0).getEndpoint();
+        String cpuKey = redisUtil.buildKey(endPoint+"cpu.used.percent");
+        String memKey = redisUtil.buildKey(endPoint+"mem.used.percent");
         long currentTime = cpuStatusList.get(0).getTimestamp();
-        String member = currentTime + ": " + cpuStatusList.get(0).getValue() + "," +cpuStatusList.get(1).getValue();
-        redisUtil.zAdd(KEY,member,currentTime);
-        while (redisUtil.countZset(KEY)>10){
-            Set<String> members = redisUtil.rangeZset(KEY,0,-1);
-            String oldestMember = null;
-            //ZSet集合默认按照score升序排列,集合第一个就是最老的元素
-            if (CollectionUtils.isNotEmpty(members)) {
-                Iterator<String> iterator = members.iterator();
-                oldestMember = iterator.next();
-                redisUtil.removeZset(KEY,oldestMember);
-            }
-        }
+        String cpuMember = currentTime + ":" + cpuStatusList.get(0).getValue();
+        String memMember = currentTime + ":" + cpuStatusList.get(1).getValue();
+        redisUtil.zAdd(cpuKey,cpuMember,currentTime);
+        redisUtil.zAdd(memKey,memMember,currentTime);
+        if (redisUtil.countZset(cpuKey)>10) removeOldest(cpuKey);
+        if (redisUtil.countZset(memKey)>10) removeOldest(memKey);
         cpuStatusDao.insertBatch(cpuStatusList);
+    }
+
+    private void removeOldest(String key){
+        Set<String> members = redisUtil.rangeZset(key,0,-1);
+        String oldestMember = null;
+        //ZSet集合默认按照score升序排列,集合第一个就是最老的元素
+        if (CollectionUtils.isNotEmpty(members)) {
+            Iterator<String> iterator = members.iterator();
+            oldestMember = iterator.next();
+            redisUtil.removeZset(key,oldestMember);
+        }
     }
 
     @Override
         public List<StatusResp> queryMetrics(StatusQueryDTO statusQueryDTO) {
-        List<StatusResp> statusRespList = new ArrayList<>();
-        //根据机器及指标查出所有
         CpuStatus cpuStatus = new CpuStatus();
         cpuStatus.setEndpoint(statusQueryDTO.getEndPoint());
-        cpuStatus.setMetric(statusQueryDTO.getMetric());
-        List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByLimit(cpuStatus);
-        if(CollectionUtils.isNotEmpty(cpuStatusList)) {
-            //过滤不符合时间段的
-            List<CpuStatus> cpuStatuses = cpuStatusList.stream()
-                    .filter(item -> item.getTimestamp() >= statusQueryDTO.getStart_ts() && item.getTimestamp() <= statusQueryDTO.getEnd_ts())
-                    .collect(Collectors.toList());
-            //根据指标分组
-            Map<String,List<CpuStatus>> map = cpuStatuses.stream()
-                    .collect(Collectors.groupingBy(CpuStatus::getMetric));
-            //包装data
-            for(String key:map.keySet()){
-                List<CpuStatus> cs = map.get(key);
-                List<Values> values = cs.stream().map(item -> {
+        if(cpuStatusDao.count(cpuStatus)==0){
+            throw new BaseException("主机不存在");
+        }
+        List<StatusResp> statusRespList = new ArrayList<>();
+        //查指定类型利用率
+        if(!StringUtils.isEmpty(statusQueryDTO.getMetric())){
+            StatusResp statusResp = new StatusResp();
+            List<Values> valueList = new ArrayList<>();
+            //查Redis
+            String key = redisUtil.buildKey(statusQueryDTO.getEndPoint()+statusQueryDTO.getMetric());
+            Set<String> members = redisUtil.rangeByScore(key,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
+            Long time=Long.MIN_VALUE;
+            if(CollectionUtils.isNotEmpty(members)){
+                //包装data
+                for(String item : members){
+                    String[] parts = item.split(":");
+                    long timeStamp = Arrays.stream(parts[0].split(""))
+                            .mapToLong(Long::parseLong)
+                            .sum();
+                    double value = Arrays.stream(parts[1].split("\\\\."))
+                            .mapToDouble(Double::parseDouble)
+                            .sum();
+                    Values values = new Values(timeStamp,value);
+                    valueList.add(values);
+                    //找出Redis中最老的时间
+                    if(time<timeStamp) time=timeStamp;
+                }
+            }
+            //查数据库
+            if(time<=statusQueryDTO.getStart_ts()){
+                statusResp.setMetric(statusQueryDTO.getMetric());
+                statusResp.setValues(valueList);
+                statusRespList.add(statusResp);
+                return statusRespList;
+            }else if(time>statusQueryDTO.getStart_ts()&&time<=statusQueryDTO.getEnd_ts()){
+                Long timeEnd = time;
+                List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
+                        ,statusQueryDTO.getStart_ts(),timeEnd);
+                if(CollectionUtils.isNotEmpty(cpuStatusList)) {
+                    //包装data
+                    List<Values> values = cpuStatusList.stream().map(item -> {
+                        Values value = new Values();
+                        value.setTimeStamp(item.getTimestamp());
+                        value.setValue(item.getValue());
+                        return value;
+                    }).collect(Collectors.toList());
+                    valueList.addAll(values);
+                    statusResp.setMetric(statusQueryDTO.getMetric());
+                    statusResp.setValues(valueList);
+                    statusRespList.add(statusResp);
+                }
+                return statusRespList;
+            }else{
+                throw new BaseException("服务器内部错误");
+            }
+            //查全部类型
+        }else{
+            StatusResp cpuStatusResp = new StatusResp();
+            StatusResp memStatusResp = new StatusResp();
+            List<Values> cpuValueList = new ArrayList<>();
+            List<Values> memValueList = new ArrayList<>();
+            String cpukey = redisUtil.buildKey(statusQueryDTO.getEndPoint()+"cpu.used.percent");
+            String memkey = redisUtil.buildKey(statusQueryDTO.getEndPoint()+"mem.used.percent");
+            Set<String> cpuMembers = redisUtil.rangeByScore(cpukey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
+            Set<String> memMembers = redisUtil.rangeByScore(memkey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
+            Long time=Long.MIN_VALUE;
+            if(CollectionUtils.isNotEmpty(cpuMembers)&&CollectionUtils.isNotEmpty(memMembers)){
+                //包装data
+                for(String item : cpuMembers){
+                    String[] parts = item.split(":");
+                    long timeStamp = Arrays.stream(parts[0].split(""))
+                            .mapToLong(Long::parseLong)
+                            .sum();
+                    double value = Arrays.stream(parts[1].split("\\\\."))
+                            .mapToDouble(Double::parseDouble)
+                            .sum();
+                    Values values = new Values(timeStamp,value);
+                    cpuValueList.add(values);
+                }
+                for(String item : memMembers){
+                    String[] parts = item.split(":");
+                    long timeStamp = Arrays.stream(parts[0].split(""))
+                            .mapToLong(Long::parseLong)
+                            .sum();
+                    double value = Arrays.stream(parts[1].split("\\\\."))
+                            .mapToDouble(Double::parseDouble)
+                            .sum();
+                    Values values = new Values(timeStamp,value);
+                    memValueList.add(values);
+                    //找出Redis中最老的时间
+                    if(time<timeStamp) time=timeStamp;
+                }
+            }
+            if(time<=statusQueryDTO.getStart_ts()){
+                cpuStatusResp.setMetric("cpu.used.percent");
+                cpuStatusResp.setValues(cpuValueList);
+                statusRespList.add(cpuStatusResp);
+                memStatusResp.setMetric("mem.used.percent");
+                memStatusResp.setValues(memValueList);
+                statusRespList.add(memStatusResp);
+                return statusRespList;
+            }else if(time>statusQueryDTO.getStart_ts()&&time<=statusQueryDTO.getEnd_ts()){
+                Long timeEnd = time;
+                List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
+                        ,statusQueryDTO.getStart_ts(),timeEnd);
+                if(CollectionUtils.isNotEmpty(cpuStatusList)) {
+                    //根据指标分组
+                    Map<String,List<CpuStatus>> map =cpuStatusList.stream()
+                            .collect(Collectors.groupingBy(CpuStatus::getMetric));
+                    //包装data
+                    for(String key:map.keySet()){
+                        List<CpuStatus> cs = map.get(key);
+                        List<Values> values = cs.stream().map(item -> {
                             Values value = new Values();
                             value.setTimeStamp(item.getTimestamp());
                             value.setValue(item.getValue());
                             return value;
-                        })
-                        .collect(Collectors.toList());
-                StatusResp statusResp = new StatusResp();
-                statusResp.setMetric(key);
-                statusResp.setValues(values);
-                statusRespList.add(statusResp);
+                        }).collect(Collectors.toList());
+                        if(key=="cpu.used.percent"){
+                            cpuValueList.addAll(values);
+                            cpuStatusResp.setMetric("cpu.used.percent");
+                            cpuStatusResp.setValues(cpuValueList);
+                            statusRespList.add(cpuStatusResp);
+                        }else{
+                            memValueList.addAll(values);
+                            memStatusResp.setMetric("mem.used.percent");
+                            memStatusResp.setValues(memValueList);
+                            statusRespList.add(memStatusResp);
+                        }
+                    }
+                }
+                return statusRespList;
+            }else{
+                throw new BaseException("服务器内部错误");
             }
         }
-        return statusRespList;
     }
 }
