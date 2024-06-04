@@ -37,16 +37,18 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
     public Double getMemUsage() throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"));
         String line;
-        long totalMemory = 0,freeMemory = 0;
+        long totalMemory = 0,freeMemory = 0,availableMemory=0;
         while ((line = reader.readLine()) != null) {
             if (line.startsWith("MemTotal:")) {
                 totalMemory = Long.parseLong(line.split("\\s+")[1]);
             } else if (line.startsWith("MemFree:")) {
                 freeMemory = Long.parseLong(line.split("\\s+")[1]);
+            }else if (line.startsWith("MemAvailable :")) {
+                availableMemory = Long.parseLong(line.split("\\s+")[1]);
             }
         }
         reader.close();
-        return Double.parseDouble(String.format("%.2f",100 * ((totalMemory - freeMemory)*1.0 / totalMemory)));
+        return Double.parseDouble(String.format("%.2f",100 * ((totalMemory - freeMemory-availableMemory)*1.0 / totalMemory)));
     }
 }
 
