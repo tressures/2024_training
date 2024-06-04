@@ -40,13 +40,13 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
         long totalMemory = 0,freeMemory = 0,Buffers=0,Cached=0;
         while ((line = reader.readLine()) != null) {
             if (line.startsWith("MemTotal:")) {
-                totalMemory = Long.parseLong(line.split("\\s+")[1]);
+                totalMemory = Long.parseLong(line.split("\\\\s+")[1]);
             } else if (line.startsWith("MemFree:")) {
-                freeMemory = Long.parseLong(line.split("\\s+")[1]);
+                freeMemory = Long.parseLong(line.split("\\\\s+")[1]);
             }else if (line.startsWith("Buffers:")) {
-                Buffers = Long.parseLong(line.split("\\s+")[1]);
+                Buffers = Long.parseLong(line.split("\\\\s+")[1]);
             }else if (line.startsWith("Cached:")) {
-                Cached = Long.parseLong(line.split("\\s+")[1]);
+                Cached = Long.parseLong(line.split("\\\\s+")[1]);
             }
         }
         reader.close();
