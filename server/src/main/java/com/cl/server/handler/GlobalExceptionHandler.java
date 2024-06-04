@@ -5,7 +5,6 @@ import com.cl.server.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.alibaba.fastjson.JSON;
 
 @Slf4j
 @ControllerAdvice

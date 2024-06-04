@@ -1,5 +1,6 @@
 package com.cl.server.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.cl.server.entity.CpuStatus;
 import com.cl.server.entity.DTO.StatusQueryDTO;
 import com.cl.server.entity.Result;
@@ -46,6 +47,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
         redisUtil.zAdd(memKey,memMember,currentTime);
         if (redisUtil.countZset(cpuKey)>10) removeOldest(cpuKey);
         if (redisUtil.countZset(memKey)>10) removeOldest(memKey);
+        log.info("CpuStatusServiceImpl.uploadMetrics.cpuStatusList:{}", JSON.toJSONString(cpuStatusList));
         cpuStatusDao.insertBatch(cpuStatusList);
     }
 
@@ -114,6 +116,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                 statusResp.setValues(valueList);
                 statusRespList.add(statusResp);
                 }
+            log.info("CpuStatusServiceImpl.queryMetrics.statusRespList:{}", JSON.toJSONString(statusRespList));
             return statusRespList;
                 //查全部类型
         }else{
@@ -187,6 +190,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                     }
                 }
             }
+            log.info("CpuStatusServiceImpl.queryMetrics.statusRespList:{}", JSON.toJSONString(statusRespList));
             return statusRespList;
         }
     }

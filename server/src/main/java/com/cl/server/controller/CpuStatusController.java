@@ -48,6 +48,7 @@ public class CpuStatusController {
         }catch (Exception e){
             throw new BaseException("参数为空");
         }
+        log.info("CpuStatusController.query.statusQueryDTO:{}", JSON.toJSONString(statusQueryDTO));
         List<StatusResp> list = cpuStatusService.queryMetrics(statusQueryDTO);
         return Result.ok(list);
     }
