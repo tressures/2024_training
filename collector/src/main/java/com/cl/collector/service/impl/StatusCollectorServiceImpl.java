@@ -30,7 +30,7 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
             }
         }
         reader.close();
-        return Double.parseDouble(String.format("%.2f",100 * idleTime*1.0 / totalTime));
+        return Double.parseDouble(String.format("%.2f",100 * (totalTime-idleTime*1.0 / totalTime)));
     }
 
     @Override
@@ -46,7 +46,7 @@ public class StatusCollectorServiceImpl implements StatusCollectorService {
             }
         }
         reader.close();
-        return Double.parseDouble(String.format("%.2f",100 * (totalMemory - freeMemory)*1.0 / totalMemory));
+        return Double.parseDouble(String.format("%.2f",100 * ((totalMemory - freeMemory)*1.0 / totalMemory)));
     }
 }
 
