@@ -1,9 +1,11 @@
 package com.cl.server.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.cl.server.convert.StatusConverter;
 import com.cl.server.entity.CpuStatus;
-import com.cl.server.entity.DTO.StatusQueryDTO;
-import com.cl.server.entity.VO.StatusResp;
+import com.cl.server.pojo.DTO.StatusDTO;
+import com.cl.server.pojo.DTO.StatusQueryDTO;
+import com.cl.server.pojo.VO.StatusResp;
 import com.cl.server.entity.Result;
 import com.cl.server.exception.BaseException;
 import com.cl.server.service.CpuStatusService;
@@ -28,13 +30,14 @@ public class CpuStatusController {
     private CpuStatusService cpuStatusService;
 
     @PostMapping("/upload")
-    public Result uploadMetric(@RequestBody List<CpuStatus> cpuStatusList){
+    public Result uploadMetric(@RequestBody List<StatusDTO> statusDTOS){
         try {
-            Preconditions.checkNotNull(cpuStatusList,"获取指标为空");
+            Preconditions.checkNotNull(statusDTOS,"获取指标为空");
         }catch (Exception e){
             throw new BaseException(e.getMessage());
         }
-        log.info("CpuStatusController.upload.cpuStatusList:{}", JSON.toJSONString(cpuStatusList));
+        log.info("CpuStatusController.upload.cpuStatusList:{}", JSON.toJSONString(statusDTOS));
+        List<CpuStatus> cpuStatusList = StatusConverter.INSTANCE.convertDTOListToEntityList(statusDTOS);
         cpuStatusService.uploadMetrics(cpuStatusList);
         return Result.ok();
     }

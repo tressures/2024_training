@@ -2,21 +2,21 @@ package com.cl.server.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.cl.server.entity.CpuStatus;
-import com.cl.server.entity.DTO.StatusQueryDTO;
-import com.cl.server.entity.Result;
-import com.cl.server.entity.VO.StatusResp;
-import com.cl.server.entity.VO.Values;
+import com.cl.server.enums.IsDeletedFlagEnum;
+import com.cl.server.pojo.DTO.StatusQueryDTO;
+import com.cl.server.pojo.VO.StatusResp;
+import com.cl.server.pojo.VO.Values;
 import com.cl.server.exception.BaseException;
 import com.cl.server.mapper.CpuStatusDao;
 import com.cl.server.redis.RedisUtil;
 import com.cl.server.service.CpuStatusService;
-import io.netty.util.internal.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,6 +47,10 @@ public class CpuStatusServiceImpl implements CpuStatusService {
         redisUtil.zAdd(memKey,memMember,currentTime);
         if (redisUtil.countZset(cpuKey)>10) removeOldest(cpuKey);
         if (redisUtil.countZset(memKey)>10) removeOldest(memKey);
+        for(CpuStatus cpuStatus : cpuStatusList){
+            cpuStatus.setCreateTime(LocalDateTime.now());
+            cpuStatus.setIsDelete(IsDeletedFlagEnum.UN_DELETED.getCode());
+        }
         log.info("CpuStatusServiceImpl.uploadMetrics.cpuStatusList:{}", JSON.toJSONString(cpuStatusList));
         cpuStatusDao.insertBatch(cpuStatusList);
     }

@@ -1,8 +1,8 @@
 package com.cl.server.service;
 
 import com.cl.server.entity.CpuStatus;
-import com.cl.server.entity.DTO.StatusQueryDTO;
-import com.cl.server.entity.VO.StatusResp;
+import com.cl.server.pojo.DTO.StatusQueryDTO;
+import com.cl.server.pojo.VO.StatusResp;
 
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.cl.server.entity.DTO;
+package com.cl.server.pojo.DTO;
 
 import lombok.Data;
 
