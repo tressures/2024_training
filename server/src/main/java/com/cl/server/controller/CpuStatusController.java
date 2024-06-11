@@ -13,6 +13,7 @@ import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +38,16 @@ public class CpuStatusController {
             throw new BaseException(e.getMessage());
         }
         log.info("CpuStatusController.upload.cpuStatusList:{}", JSON.toJSONString(statusDTOS));
-        List<CpuStatus> cpuStatusList = StatusConverter.INSTANCE.convertDTOListToEntityList(statusDTOS);
+        List<CpuStatus> cpuStatusList = new ArrayList<>();
+        for(StatusDTO statusDTO : statusDTOS){
+            CpuStatus cpuStatus = new CpuStatus();
+            cpuStatus.setMetric(statusDTO.getMetric());
+            cpuStatus.setEndpoint(statusDTO.getEndpoint());
+            cpuStatus.setTimestamp(statusDTO.getTimestamp());
+            cpuStatus.setStep(statusDTO.getStep());
+            cpuStatus.setValue(statusDTO.getValue());
+            cpuStatusList.add(cpuStatus);
+        }
         cpuStatusService.uploadMetrics(cpuStatusList);
         return Result.ok();
     }
