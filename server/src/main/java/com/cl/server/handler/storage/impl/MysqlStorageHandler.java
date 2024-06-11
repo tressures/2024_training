@@ -10,12 +10,10 @@ import com.cl.server.pojo.DTO.LogQueryDTO;
 import com.cl.server.pojo.VO.LogInfoVO;
 import com.cl.server.enums.StorageTypeEnum;
 import com.cl.server.handler.storage.StorageTypeHandler;
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
