@@ -11,10 +11,8 @@ import lombok.Getter;
 public enum StorageTypeEnum {
 
     LOCAL(1,"local"),
-    MINIO(2,"minio"),
-    ES(3,"es"),
-    MYSQL(4,"mysql")
-    ;
+    ES(2,"es"),
+    MYSQL(3,"mysql");
 
     public int code;
 

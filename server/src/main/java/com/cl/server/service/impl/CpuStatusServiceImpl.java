@@ -8,7 +8,7 @@ import com.cl.server.pojo.VO.StatusResp;
 import com.cl.server.pojo.VO.Values;
 import com.cl.server.exception.BaseException;
 import com.cl.server.mapper.CpuStatusDao;
-import com.cl.server.redis.RedisUtil;
+import com.cl.server.util.RedisUtil;
 import com.cl.server.service.CpuStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -122,7 +122,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                 }
             log.info("CpuStatusServiceImpl.queryMetrics.statusRespList:{}", JSON.toJSONString(statusRespList));
             return statusRespList;
-                //查全部类型
+            //查全部类型
         }else{
             StatusResp cpuStatusResp = new StatusResp();
             StatusResp memStatusResp = new StatusResp();

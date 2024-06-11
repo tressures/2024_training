@@ -20,7 +20,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
+/**
+ * MYSQL存储方式
+ *
+ * @author: tressures
+ * @date: 2024/6/5
+ */
 @Component
 public class MysqlStorageHandler implements StorageTypeHandler {
 
@@ -74,7 +79,6 @@ public class MysqlStorageHandler implements StorageTypeHandler {
                 .sorted(Comparator.comparing(LogInfo::getCreateTime).reversed())
                 .map(LogInfo::getInfo)
                 .collect(Collectors.toList());
-        //包装data
         logInfoVO.setHostname(logAddress.getHostName());
         logInfoVO.setFile(logAddress.getFile());
         logInfoVO.setLogs(logs);
