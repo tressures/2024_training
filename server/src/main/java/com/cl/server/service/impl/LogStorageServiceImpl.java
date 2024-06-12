@@ -12,7 +12,12 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-
+/**
+ * 日志存储服务实现类
+ *
+ * @author tressures
+ * @date:  2024/6/5
+ */
 @Slf4j
 @Service("logStorageService")
 public class LogStorageServiceImpl implements LogStorageService {

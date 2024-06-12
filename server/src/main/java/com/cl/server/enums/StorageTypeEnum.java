@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 public enum StorageTypeEnum {
 
-    LOCAL(1,"local"),
+    LOCAL(1,"local_file"),
     ES(2,"es"),
     MYSQL(3,"mysql");
 

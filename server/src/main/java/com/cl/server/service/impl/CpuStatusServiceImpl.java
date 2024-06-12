@@ -69,7 +69,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
     @Override
         public List<StatusResp> queryMetrics(StatusQueryDTO statusQueryDTO) {
         CpuStatus cpuStatus = new CpuStatus();
-        cpuStatus.setEndpoint(statusQueryDTO.getEndPoint());
+        cpuStatus.setEndpoint(statusQueryDTO.getEndpoint());
         if(cpuStatusDao.count(cpuStatus)==0){
             throw new BaseException("主机不存在");
         }
@@ -79,7 +79,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             StatusResp statusResp = new StatusResp();
             List<Values> valueList = new ArrayList<>();
             //查Redis
-            String key = redisUtil.buildKey(statusQueryDTO.getEndPoint()+statusQueryDTO.getMetric());
+            String key = redisUtil.buildKey(statusQueryDTO.getEndpoint()+statusQueryDTO.getMetric());
             Set<String> members = redisUtil.rangeByScore(key,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
 
             Long timeEnd=Long.MIN_VALUE;
@@ -105,7 +105,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                 timeEnd = statusQueryDTO.getEnd_ts();
             }
             //查数据库
-            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
+            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
                     ,statusQueryDTO.getStart_ts(),timeEnd);
             if(CollectionUtils.isNotEmpty(cpuStatusList)) {
                 //包装data
@@ -128,8 +128,8 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             StatusResp memStatusResp = new StatusResp();
             List<Values> cpuValueList = new ArrayList<>();
             List<Values> memValueList = new ArrayList<>();
-            String cpukey = redisUtil.buildKey(statusQueryDTO.getEndPoint()+"cpu.used.percent");
-            String memkey = redisUtil.buildKey(statusQueryDTO.getEndPoint()+"mem.used.percent");
+            String cpukey = redisUtil.buildKey(statusQueryDTO.getEndpoint()+"cpu.used.percent");
+            String memkey = redisUtil.buildKey(statusQueryDTO.getEndpoint()+"mem.used.percent");
             Set<String> cpuMembers = redisUtil.rangeByScore(cpukey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
             Set<String> memMembers = redisUtil.rangeByScore(memkey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
 
@@ -166,7 +166,7 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                 timeEnd = statusQueryDTO.getEnd_ts();
             }
             //查数据库
-            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndPoint(),statusQueryDTO.getMetric()
+            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
                     ,statusQueryDTO.getStart_ts(),timeEnd);
             if(CollectionUtils.isNotEmpty(cpuStatusList)) {
                 //根据指标分组

@@ -1,19 +1,17 @@
 package com.cl.server.controller;
 
+import com.cl.server.config.LogStorageConfig;
 import com.cl.server.pojo.DTO.LogInfoDTO;
 import com.cl.server.pojo.DTO.LogQueryDTO;
 import com.cl.server.entity.Result;
 import com.cl.server.pojo.VO.LogInfoVO;
-import com.cl.server.pojo.VO.StatusResp;
 import com.cl.server.exception.BaseException;
 import com.cl.server.service.LogStorageService;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.Resource;
 import java.util.List;
-
 /**
  * LogStorage控制层
  *
@@ -24,6 +22,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/log")
 public class LogStorageController {
+
+    @Resource
+    private LogStorageConfig logStorageConfig;
 
     @Resource
     private LogStorageService logStorageService;
@@ -49,5 +50,10 @@ public class LogStorageController {
         }
         LogInfoVO logInfoVO = logStorageService.queryLogs(logQueryDTO);
         return Result.ok(logInfoVO);
+    }
+
+    @GetMapping("/testnacos")
+    public String testnacos(){
+        return logStorageConfig.getLogStorage();
     }
 }

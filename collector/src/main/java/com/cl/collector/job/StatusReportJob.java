@@ -17,6 +17,12 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 
+/**
+ * 定时采集任务类
+ *
+ * @author: tressures
+ * @date: 2024/5/26
+ */
 @Component
 @Slf4j
 public class StatusReportJob {

@@ -20,7 +20,7 @@
     </select>
 
     <!--查询指定行数据-->
-    <select id="queryAllByLimit" resultMap="java.lang.Integer">
+    <select id="queryAllByLimit" resultType="java.lang.Integer">
         select
           id
         from log_address

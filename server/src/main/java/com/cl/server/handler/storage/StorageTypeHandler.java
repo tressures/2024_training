@@ -4,10 +4,14 @@ import com.cl.server.pojo.DTO.LogInfoDTO;
 import com.cl.server.pojo.DTO.LogQueryDTO;
 import com.cl.server.pojo.VO.LogInfoVO;
 import com.cl.server.enums.StorageTypeEnum;
-
 import java.util.List;
 
-
+/**
+ * 存储方式抽象接口
+ *
+ * @author: tressures
+ * @date: 2024/6/5
+ */
 public interface StorageTypeHandler {
 
     /**

@@ -13,9 +13,7 @@ import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
-
 /**
  * (CpuStatus)表控制层
  *
@@ -38,16 +36,7 @@ public class CpuStatusController {
             throw new BaseException(e.getMessage());
         }
         log.info("CpuStatusController.upload.cpuStatusList:{}", JSON.toJSONString(statusDTOS));
-        List<CpuStatus> cpuStatusList = new ArrayList<>();
-        for(StatusDTO statusDTO : statusDTOS){
-            CpuStatus cpuStatus = new CpuStatus();
-            cpuStatus.setMetric(statusDTO.getMetric());
-            cpuStatus.setEndpoint(statusDTO.getEndpoint());
-            cpuStatus.setTimestamp(statusDTO.getTimestamp());
-            cpuStatus.setStep(statusDTO.getStep());
-            cpuStatus.setValue(statusDTO.getValue());
-            cpuStatusList.add(cpuStatus);
-        }
+        List<CpuStatus> cpuStatusList = StatusConverter.INSTANCE.convertDTOListToEntityList(statusDTOS);
         cpuStatusService.uploadMetrics(cpuStatusList);
         return Result.ok();
     }
@@ -55,7 +44,7 @@ public class CpuStatusController {
     @GetMapping("/query")
     public Result<List<StatusResp>> queryMetrics(@RequestBody StatusQueryDTO statusQueryDTO){
         try{
-            Preconditions.checkNotNull(statusQueryDTO.getEndPoint(),"机器名称不能为空");
+            Preconditions.checkNotNull(statusQueryDTO.getEndpoint(),"机器名称不能为空");
             Preconditions.checkNotNull(statusQueryDTO.getStart_ts(),"起始时间不能为空");
             Preconditions.checkNotNull(statusQueryDTO.getEnd_ts(),"结束时间不能为空");
         }catch (Exception e){

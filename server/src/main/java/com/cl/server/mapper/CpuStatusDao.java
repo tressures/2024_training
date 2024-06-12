@@ -38,7 +38,7 @@ public interface CpuStatusDao {
      * @param
      * @return 对象列表
      */
-    List<CpuStatus> queryAllByTimeStamp(String endPoint,String metric,Long start_ts,Long end_ts);
+    List<CpuStatus> queryAllByTimeStamp(String endPoint, String metric, Long start_ts, Long end_ts);
 
     /**
      * 统计总行数

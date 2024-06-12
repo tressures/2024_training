@@ -7,7 +7,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
-
+/**
+ * 采集状态服务
+ *
+ * @author: tressures
+ * @date: 2024/5/26
+ */
 @Service("statusCollectorService")
 @Slf4j
 public class StatusCollectorServiceImpl implements StatusCollectorService {

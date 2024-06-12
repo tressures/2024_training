@@ -4,7 +4,6 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.io.Serializable;
-
 /**
  * (LogInfo)实体类
  *

@@ -2,8 +2,12 @@ package com.cl.server.pojo.DTO;
 
 import lombok.Data;
 
-
-
+/**
+ * 状态上报DTO
+ *
+ * @author tressures
+ * @date:  2024/5/27
+ */
 @Data
 public class StatusDTO {
     
@@ -16,6 +20,5 @@ public class StatusDTO {
     private Long step;
     
     private Double value;
-
 }
 

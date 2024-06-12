@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.cl.server.mapper.CpuStatusDao">
+<mapper namespace="com.cl.server.dao.CpuStatusDao">
 
     <resultMap type="com.cl.server.entity.CpuStatus" id="CpuStatusMap">
         <result property="id" column="id" jdbcType="INTEGER"/>
@@ -9,20 +9,23 @@
         <result property="timestamp" column="timestamp" jdbcType="INTEGER"/>
         <result property="step" column="step" jdbcType="INTEGER"/>
         <result property="value" column="value" jdbcType="NUMERIC"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="is_delete" jdbcType="INTEGER"/>
     </resultMap>
 
     <!--查询单个-->
     <select id="queryById" resultMap="CpuStatusMap">
         select
-          id, metric, endpoint, timestamp, step, value,create_time,update_time,is_delete
+          id, metric, endpoint, timestamp, step, value, create_time, update_time, is_delete
         from cpu_status
         where id = #{id}
     </select>
 
-    <!--查询所有数据-->
+    <!--查询指定行数据-->
     <select id="queryAllByLimit" resultMap="CpuStatusMap">
         select
-          id, metric, endpoint, timestamp, step, value,create_time,update_time,is_delete
+          id, metric, endpoint, timestamp, step, value, create_time, update_time, is_delete
         from cpu_status
         <where>
             <if test="id != null">
@@ -43,13 +46,13 @@
             <if test="value != null">
                 and value = #{value}
             </if>
-            <if test="create_time != null">
+            <if test="createTime != null">
                 and create_time = #{createTime}
             </if>
-            <if test="update_time != null">
+            <if test="updateTime != null">
                 and update_time = #{updateTime}
             </if>
-            <if test="is_delete != null">
+            <if test="isDelete != null">
                 and is_delete = #{isDelete}
             </if>
         </where>
@@ -58,7 +61,7 @@
     <!--时间范围查询所有数据-->
     <select id="queryAllByTimeStamp" resultMap="CpuStatusMap">
         select
-        id, metric, endpoint, timestamp, step, value,create_time,update_time,is_delete
+        id, metric, endpoint, timestamp, step, value, create_time, update_time, is_delete
         from cpu_status
         <where>
             <if test="metric != null and metric != ''">
@@ -67,7 +70,7 @@
             <if test="endpoint != null and endpoint != ''">
                 and endpoint = #{endpoint}
             </if>
-            <if test="sart_ts != null">
+            <if test="start_ts != null">
                 and timestamp &gt; #{start_ts}
             </if>
             <if test="end_ts != null">
@@ -99,13 +102,13 @@
             <if test="value != null">
                 and value = #{value}
             </if>
-            <if test="create_time != null">
+            <if test="createTime != null">
                 and create_time = #{createTime}
             </if>
-            <if test="update_time != null">
+            <if test="updateTime != null">
                 and update_time = #{updateTime}
             </if>
-            <if test="is_delete != null">
+            <if test="isDelete != null">
                 and is_delete = #{isDelete}
             </if>
         </where>
@@ -113,30 +116,33 @@
 
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
-        insert into cpu_status(metric, endpoint, timestamp, step, value,create_time,update_time,is_delete)
-        values (#{metric}, #{endpoint}, #{timestamp}, #{step}, #{value}, #{createTime},#{updateTime},#{isDelete})
+        insert into cpu_status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
+        values (#{metric}, #{endpoint}, #{timestamp}, #{step}, #{value}, #{createTime}, #{updateTime}, #{isDelete})
     </insert>
 
     <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into cpu_status(metric, endpoint, timestamp, step, value,create_time,update_time,is_delete)
+        insert into cpu_status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
         values
         <foreach collection="entities" item="entity" separator=",">
-        (#{entity.metric}, #{entity.endpoint}, #{entity.timestamp}, #{entity.step}, #{entity.value},#{entity.createTime},#{entity.updateTime},#{entity.isDelete})
+        (#{entity.metric}, #{entity.endpoint}, #{entity.timestamp}, #{entity.step}, #{entity.value}, #{entity.createTime}, #{entity.updateTime}, #{entity.isDelete})
         </foreach>
     </insert>
 
     <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into cpu_status(metric, endpoint, timestamp, step, value,create_time,update_time,is_delete)
+        insert into cpu_status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
         values
         <foreach collection="entities" item="entity" separator=",">
-            (#{entity.metric}, #{entity.endpoint}, #{entity.timestamp}, #{entity.step}, #{entity.value},#{entity.createTime},#{entity.updateTime},#{entity.isDelete})
+            (#{entity.metric}, #{entity.endpoint}, #{entity.timestamp}, #{entity.step}, #{entity.value}, #{entity.createTime}, #{entity.updateTime}, #{entity.isDelete})
         </foreach>
         on duplicate key update
         metric = values(metric),
         endpoint = values(endpoint),
         timestamp = values(timestamp),
         step = values(step),
-        value = values(value)
+        value = values(value),
+        create_time = values(create_time),
+        update_time = values(update_time),
+        is_delete = values(is_delete)
     </insert>
 
     <!--通过主键修改数据-->
@@ -158,14 +164,14 @@
             <if test="value != null">
                 value = #{value},
             </if>
-            <if test="create_time != null">
-                create_time = #{createTime}
+            <if test="createTime != null">
+                create_time = #{createTime},
             </if>
-            <if test="update_time != null">
-                update_time = #{updateTime}
+            <if test="updateTime != null">
+                update_time = #{updateTime},
             </if>
-            <if test="is_delete != null">
-                is_delete = #{isDelete}
+            <if test="isDelete != null">
+                is_delete = #{isDelete},
             </if>
         </set>
         where id = #{id}
