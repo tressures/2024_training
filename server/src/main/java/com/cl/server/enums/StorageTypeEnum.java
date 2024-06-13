@@ -33,7 +33,7 @@ public enum StorageTypeEnum {
     }
     public static StorageTypeEnum getByDesc(String type){
         for(StorageTypeEnum resultCodeEnum : StorageTypeEnum.values()){
-            if(resultCodeEnum.desc == type){
+            if(resultCodeEnum.desc.equals(type)){
                 return resultCodeEnum;
             }
         }

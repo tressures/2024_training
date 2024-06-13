@@ -17,7 +17,6 @@ import java.util.Arrays;
 @Slf4j
 public class StatusCollectorServiceImpl implements StatusCollectorService {
 
-
     @Override
     public Double getCpuUsage() throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("/proc/stat"));

@@ -10,6 +10,7 @@ import com.cl.server.pojo.DTO.LogQueryDTO;
 import com.cl.server.pojo.VO.LogInfoVO;
 import com.cl.server.enums.StorageTypeEnum;
 import com.cl.server.handler.storage.StorageTypeHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * @date: 2024/6/5
  */
 @Component
+@Slf4j
 public class MysqlStorageHandler implements StorageTypeHandler {
 
     @Resource

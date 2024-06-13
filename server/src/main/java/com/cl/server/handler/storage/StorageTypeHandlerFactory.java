@@ -29,7 +29,7 @@ public class StorageTypeHandlerFactory implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet(){
         for (StorageTypeHandler subjectTypeHandler : storageTypeHandlerList) {
             handlerMap.put(subjectTypeHandler.getHandlerType(), subjectTypeHandler);
         }

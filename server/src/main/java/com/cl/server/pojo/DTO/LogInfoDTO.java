@@ -1,5 +1,6 @@
 package com.cl.server.pojo.DTO;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.List;
 /**
@@ -9,6 +10,7 @@ import java.util.List;
  * @date:  2024/5/27
  */
 @Data
+@AllArgsConstructor
 public class LogInfoDTO {
 
     private String hostname;

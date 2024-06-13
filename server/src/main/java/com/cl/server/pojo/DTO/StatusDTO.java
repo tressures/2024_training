@@ -1,5 +1,6 @@
 package com.cl.server.pojo.DTO;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Data;
  * @date:  2024/5/27
  */
 @Data
+@AllArgsConstructor
 public class StatusDTO {
     
     private String metric;
