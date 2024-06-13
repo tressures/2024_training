@@ -10,7 +10,7 @@ import java.io.Serializable;
  * @since 2024-06-12 18:14:30
  */
 @Data
-public class CpuStatus implements Serializable {
+public class Status implements Serializable {
     private static final long serialVersionUID = 914187712430699574L;
     
     private Integer id;

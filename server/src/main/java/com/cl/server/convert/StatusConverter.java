@@ -1,6 +1,6 @@
 package com.cl.server.convert;
 
-import com.cl.server.entity.CpuStatus;
+import com.cl.server.entity.Status;
 import com.cl.server.pojo.DTO.StatusDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -16,6 +16,6 @@ public interface StatusConverter {
 
     StatusConverter INSTANCE = Mappers.getMapper(StatusConverter.class);
 
-    List<CpuStatus> convertDTOListToEntityList(List<StatusDTO> statusDTOS);
+    List<Status> convertDTOListToEntityList(List<StatusDTO> statusDTOS);
 
 }

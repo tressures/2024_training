@@ -1,15 +1,15 @@
 package com.cl.server.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.cl.server.entity.CpuStatus;
+import com.cl.server.entity.Status;
 import com.cl.server.enums.IsDeletedFlagEnum;
 import com.cl.server.pojo.DTO.StatusQueryDTO;
 import com.cl.server.pojo.VO.StatusResp;
 import com.cl.server.pojo.VO.Values;
 import com.cl.server.exception.BaseException;
-import com.cl.server.mapper.CpuStatusDao;
+import com.cl.server.mapper.StatusDao;
 import com.cl.server.util.RedisUtil;
-import com.cl.server.service.CpuStatusService;
+import com.cl.server.service.StatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,38 +21,38 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * (CpuStatus)表服务实现类
+ * (Status)表服务实现类
  *
  * @author tressures
  * @date:  2024-05-26 17:06:02
  */
 @Service("cpuStatusService")
 @Slf4j
-public class CpuStatusServiceImpl implements CpuStatusService {
+public class StatusServiceImpl implements StatusService {
     @Resource
-    private CpuStatusDao cpuStatusDao;
+    private StatusDao statusDao;
+
     @Resource
     private RedisUtil redisUtil;
 
-
     @Override
-    public void uploadMetrics(List<CpuStatus> cpuStatusList) {
-        String endPoint=cpuStatusList.get(0).getEndpoint();
+    public void uploadMetrics(List<Status> statusList) {
+        String endPoint= statusList.get(0).getEndpoint();
         String cpuKey = redisUtil.buildKey(endPoint+"cpu.used.percent");
         String memKey = redisUtil.buildKey(endPoint+"mem.used.percent");
-        long currentTime = cpuStatusList.get(0).getTimestamp();
-        String cpuMember = currentTime + ":" + cpuStatusList.get(0).getValue();
-        String memMember = currentTime + ":" + cpuStatusList.get(1).getValue();
+        long currentTime = statusList.get(0).getTimestamp();
+        String cpuMember = currentTime + ":" + statusList.get(0).getValue();
+        String memMember = currentTime + ":" + statusList.get(1).getValue();
         redisUtil.zAdd(cpuKey,cpuMember,currentTime);
         redisUtil.zAdd(memKey,memMember,currentTime);
         if (redisUtil.countZset(cpuKey)>10) removeOldest(cpuKey);
         if (redisUtil.countZset(memKey)>10) removeOldest(memKey);
-        for(CpuStatus cpuStatus : cpuStatusList){
-            cpuStatus.setCreateTime(LocalDateTime.now());
-            cpuStatus.setIsDelete(IsDeletedFlagEnum.UN_DELETED.getCode());
+        for(Status status : statusList){
+            status.setCreateTime(LocalDateTime.now());
+            status.setIsDelete(IsDeletedFlagEnum.UN_DELETED.getCode());
         }
-        log.info("CpuStatusServiceImpl.uploadMetrics.cpuStatusList:{}", JSON.toJSONString(cpuStatusList));
-        cpuStatusDao.insertBatch(cpuStatusList);
+        log.info("CpuStatusServiceImpl.uploadMetrics.cpuStatusList:{}", JSON.toJSONString(statusList));
+        statusDao.insertBatch(statusList);
     }
 
     private void removeOldest(String key){
@@ -68,9 +68,10 @@ public class CpuStatusServiceImpl implements CpuStatusService {
 
     @Override
         public List<StatusResp> queryMetrics(StatusQueryDTO statusQueryDTO) {
-        CpuStatus cpuStatus = new CpuStatus();
-        cpuStatus.setEndpoint(statusQueryDTO.getEndpoint());
-        if(cpuStatusDao.count(cpuStatus)==0){
+        Status status = new Status();
+        status.setEndpoint(statusQueryDTO.getEndpoint());
+        long size = statusDao.count(status);
+        if(size==0L){
             throw new BaseException("主机不存在");
         }
         List<StatusResp> statusRespList = new ArrayList<>();
@@ -81,35 +82,26 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             //查Redis
             String key = redisUtil.buildKey(statusQueryDTO.getEndpoint()+statusQueryDTO.getMetric());
             Set<String> members = redisUtil.rangeByScore(key,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
-
             Long timeEnd=Long.MIN_VALUE;
             if(CollectionUtils.isNotEmpty(members)){
                 //包装data
                 for(String item : members){
-                    String[] parts = item.split(":");
-                    long timeStamp = Arrays.stream(parts[0].split(""))
-                            .mapToLong(Long::parseLong)
-                            .sum();
-                    double value = Arrays.stream(parts[1].split("\\\\."))
-                            .mapToDouble(Double::parseDouble)
-                            .sum();
-                    Values values = new Values(timeStamp,value);
+                    Values values = decorate(item);
                     valueList.add(values);
                     //找出Redis中最老的时间
-                    if(timeEnd<timeStamp) timeEnd=timeStamp;
+                    if(timeEnd< values.getTimeStamp()) timeEnd= values.getTimeStamp();
                 }
             }
-
             //先查出Redis中符合的数据，再根据Redis最早的数据时间查数据库里这个时间之前所有数据
             if(timeEnd==Long.MIN_VALUE){
                 timeEnd = statusQueryDTO.getEnd_ts();
             }
             //查数据库
-            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
+            List<Status> statusList = statusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
                     ,statusQueryDTO.getStart_ts(),timeEnd);
-            if(CollectionUtils.isNotEmpty(cpuStatusList)) {
+            if(CollectionUtils.isNotEmpty(statusList)) {
                 //包装data
-                List<Values> values = cpuStatusList.stream().map(item -> {
+                List<Values> values = statusList.stream().map(item -> {
                     Values value = new Values();
                     value.setTimeStamp(item.getTimestamp());
                     value.setValue(item.getValue());
@@ -132,33 +124,18 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             String memkey = redisUtil.buildKey(statusQueryDTO.getEndpoint()+"mem.used.percent");
             Set<String> cpuMembers = redisUtil.rangeByScore(cpukey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
             Set<String> memMembers = redisUtil.rangeByScore(memkey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
-
             Long timeEnd=Long.MIN_VALUE;
             if(CollectionUtils.isNotEmpty(cpuMembers)&&CollectionUtils.isNotEmpty(memMembers)){
                 //包装data
                 for(String item : cpuMembers){
-                    String[] parts = item.split(":");
-                    long timeStamp = Arrays.stream(parts[0].split(""))
-                            .mapToLong(Long::parseLong)
-                            .sum();
-                    double value = Arrays.stream(parts[1].split("\\\\."))
-                            .mapToDouble(Double::parseDouble)
-                            .sum();
-                    Values values = new Values(timeStamp,value);
+                    Values values = decorate(item);
                     cpuValueList.add(values);
                 }
                 for(String item : memMembers){
-                    String[] parts = item.split(":");
-                    long timeStamp = Arrays.stream(parts[0].split(""))
-                            .mapToLong(Long::parseLong)
-                            .sum();
-                    double value = Arrays.stream(parts[1].split("\\\\."))
-                            .mapToDouble(Double::parseDouble)
-                            .sum();
-                    Values values = new Values(timeStamp,value);
+                    Values values = decorate(item);
                     memValueList.add(values);
                     //找出Redis中最老的时间
-                    if(timeEnd<timeStamp) timeEnd=timeStamp;
+                    if(timeEnd<values.getTimeStamp()) timeEnd=values.getTimeStamp();
                 }
             }
             //先查出Redis中符合的数据，再根据Redis最早的数据时间查数据库里这个时间之前所有数据
@@ -166,22 +143,22 @@ public class CpuStatusServiceImpl implements CpuStatusService {
                 timeEnd = statusQueryDTO.getEnd_ts();
             }
             //查数据库
-            List<CpuStatus> cpuStatusList = cpuStatusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
+            List<Status> statusList = statusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
                     ,statusQueryDTO.getStart_ts(),timeEnd);
-            if(CollectionUtils.isNotEmpty(cpuStatusList)) {
+            if(CollectionUtils.isNotEmpty(statusList)) {
                 //根据指标分组
-                Map<String,List<CpuStatus>> map =cpuStatusList.stream()
-                        .collect(Collectors.groupingBy(CpuStatus::getMetric));
+                Map<String,List<Status>> map = statusList.stream()
+                        .collect(Collectors.groupingBy(Status::getMetric));
                 //包装data
                 for(String key:map.keySet()){
-                    List<CpuStatus> cs = map.get(key);
+                    List<Status> cs = map.get(key);
                     List<Values> values = cs.stream().map(item -> {
                         Values value = new Values();
                         value.setTimeStamp(item.getTimestamp());
                         value.setValue(item.getValue());
                         return value;
                     }).collect(Collectors.toList());
-                    if(key=="cpu.used.percent"){
+                    if("cpu.used.percent".equals(key)){
                         cpuValueList.addAll(values);
                         cpuStatusResp.setMetric("cpu.used.percent");
                         cpuStatusResp.setValues(cpuValueList);
@@ -197,5 +174,16 @@ public class CpuStatusServiceImpl implements CpuStatusService {
             log.info("CpuStatusServiceImpl.queryMetrics.statusRespList:{}", JSON.toJSONString(statusRespList));
             return statusRespList;
         }
+    }
+
+    private Values decorate(String item){
+        String[] parts = item.split(":");
+        long timeStamp = Arrays.stream(parts[0].split(""))
+                .mapToLong(Long::parseLong)
+                .sum();
+        double value = Arrays.stream(parts[1].split("\\\\."))
+                .mapToDouble(Double::parseDouble)
+                .sum();
+        return new Values(timeStamp,value);
     }
 }

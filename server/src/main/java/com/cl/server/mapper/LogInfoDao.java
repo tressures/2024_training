@@ -3,7 +3,6 @@ package com.cl.server.mapper;
 import com.cl.server.entity.LogInfo;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
-
 /**
  * (LogInfo)表数据库访问层
  *

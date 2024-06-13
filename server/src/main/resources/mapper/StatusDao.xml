@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.cl.server.dao.CpuStatusDao">
+<mapper namespace="com.cl.server.mapper.StatusDao">
 
-    <resultMap type="com.cl.server.entity.CpuStatus" id="CpuStatusMap">
+    <resultMap type="com.cl.server.entity.Status" id="StatusMap">
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="metric" column="metric" jdbcType="VARCHAR"/>
         <result property="endpoint" column="endpoint" jdbcType="VARCHAR"/>
@@ -15,18 +15,18 @@
     </resultMap>
 
     <!--查询单个-->
-    <select id="queryById" resultMap="CpuStatusMap">
+    <select id="queryById" resultMap="StatusMap">
         select
           id, metric, endpoint, timestamp, step, value, create_time, update_time, is_delete
-        from cpu_status
+        from status
         where id = #{id}
     </select>
 
     <!--查询指定行数据-->
-    <select id="queryAllByLimit" resultMap="CpuStatusMap">
+    <select id="queryAllByLimit" resultMap="StatusMap">
         select
           id, metric, endpoint, timestamp, step, value, create_time, update_time, is_delete
-        from cpu_status
+        from status
         <where>
             <if test="id != null">
                 and id = #{id}
@@ -59,16 +59,16 @@
     </select>
 
     <!--时间范围查询所有数据-->
-    <select id="queryAllByTimeStamp" resultMap="CpuStatusMap">
+    <select id="queryAllByTimeStamp" resultMap="StatusMap">
         select
         id, metric, endpoint, timestamp, step, value, create_time, update_time, is_delete
-        from cpu_status
+        from status
         <where>
-            <if test="metric != null and metric != ''">
-                and metric = #{metric}
-            </if>
             <if test="endpoint != null and endpoint != ''">
                 and endpoint = #{endpoint}
+            </if>
+            <if test="metric != null and metric != ''">
+                and metric = #{metric}
             </if>
             <if test="start_ts != null">
                 and timestamp &gt; #{start_ts}
@@ -82,7 +82,7 @@
     <!--统计总行数-->
     <select id="count" resultType="java.lang.Long">
         select count(1)
-        from cpu_status
+        from status
         <where>
             <if test="id != null">
                 and id = #{id}
@@ -116,12 +116,12 @@
 
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
-        insert into cpu_status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
+        insert into status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
         values (#{metric}, #{endpoint}, #{timestamp}, #{step}, #{value}, #{createTime}, #{updateTime}, #{isDelete})
     </insert>
 
     <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into cpu_status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
+        insert into status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
         values
         <foreach collection="entities" item="entity" separator=",">
         (#{entity.metric}, #{entity.endpoint}, #{entity.timestamp}, #{entity.step}, #{entity.value}, #{entity.createTime}, #{entity.updateTime}, #{entity.isDelete})
@@ -129,7 +129,7 @@
     </insert>
 
     <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into cpu_status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
+        insert into status(metric, endpoint, timestamp, step, value, create_time, update_time, is_delete)
         values
         <foreach collection="entities" item="entity" separator=",">
             (#{entity.metric}, #{entity.endpoint}, #{entity.timestamp}, #{entity.step}, #{entity.value}, #{entity.createTime}, #{entity.updateTime}, #{entity.isDelete})
@@ -147,7 +147,7 @@
 
     <!--通过主键修改数据-->
     <update id="update">
-        update cpu_status
+        update status
         <set>
             <if test="metric != null and metric != ''">
                 metric = #{metric},
@@ -179,7 +179,7 @@
 
     <!--通过主键删除-->
     <delete id="deleteById">
-        delete from cpu_status where id = #{id}
+        delete from status where id = #{id}
     </delete>
 
 </mapper>

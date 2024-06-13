@@ -4,7 +4,6 @@ import com.cl.server.entity.LogAddress;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-
 /**
  * (LogAddress)表数据库访问层
  *
