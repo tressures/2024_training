@@ -2,6 +2,8 @@ package com.cl.server.pojo.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * 日志查询DTO
  *
@@ -10,6 +12,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class LogQueryDTO {
 
     private String hostname;
