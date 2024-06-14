@@ -37,7 +37,7 @@ public enum ResultCodeEnum {
     }
     public static ResultCodeEnum getByDesc(String desc){
         for(ResultCodeEnum resultCodeEnum : ResultCodeEnum.values()){
-            if(resultCodeEnum.desc == desc){
+            if(resultCodeEnum.desc.equals(desc)){
                 return resultCodeEnum;
             }
         }
