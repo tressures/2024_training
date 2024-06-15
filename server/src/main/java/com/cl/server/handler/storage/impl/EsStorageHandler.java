@@ -8,18 +8,15 @@ import com.cl.server.pojo.VO.LogInfoVO;
 import com.cl.server.enums.StorageTypeEnum;
 import com.cl.server.handler.storage.StorageTypeHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Component;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -64,6 +61,9 @@ public class EsStorageHandler implements StorageTypeHandler {
 
     @Override
     public LogInfoVO query(LogQueryDTO logQueryDTO) {
+        LogInfoVO logInfoVO = new LogInfoVO();
+        logInfoVO.setHostname(logQueryDTO.getHostname());
+        logInfoVO.setFile(logQueryDTO.getFile());
         //构建查询参数
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("hostname",logQueryDTO.getHostname()))
@@ -73,6 +73,9 @@ public class EsStorageHandler implements StorageTypeHandler {
                 .build();
         SearchHits<LogEs> search = elasticsearchRestTemplate.search(nativeSearchQuery,LogEs.class);
         List<SearchHit<LogEs>> searchHits = search.getSearchHits();
+        if(CollectionUtils.isEmpty(searchHits)){
+            return logInfoVO;
+        }
         List<LogEs> logEsList = searchHits.stream()
                 .map(SearchHit::getContent)
                 .collect(Collectors.toList());
@@ -83,9 +86,6 @@ public class EsStorageHandler implements StorageTypeHandler {
         List<String> logs = reverse.stream()
                 .map(LogEs::getLog)
                 .collect(Collectors.toList());
-        LogInfoVO logInfoVO = new LogInfoVO();
-        logInfoVO.setHostname(logQueryDTO.getHostname());
-        logInfoVO.setFile(logQueryDTO.getFile());
         logInfoVO.setLogs(logs);
         return logInfoVO;
     }

@@ -7,7 +7,7 @@ import java.io.IOException;
  * @author: tressures
  * @date: 2024/5/26
  */
-public interface StatusCollectorService {
+public interface StatusService {
 
     Double getCpuUsage() throws IOException;
 

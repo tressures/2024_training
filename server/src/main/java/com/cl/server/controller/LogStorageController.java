@@ -1,5 +1,6 @@
 package com.cl.server.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.cl.server.config.LogStorageConfig;
 import com.cl.server.pojo.DTO.LogInfoDTO;
 import com.cl.server.pojo.DTO.LogQueryDTO;
@@ -36,6 +37,7 @@ public class LogStorageController {
         }catch (Exception e){
             throw new BaseException("参数为空");
         }
+        log.info("LogStorageController.upload.logInfoDTOS:{}", JSON.toJSONString(logInfoDTOS));
         logStorageService.uploadLogs(logInfoDTOS);
         return Result.ok();
     }
@@ -48,7 +50,9 @@ public class LogStorageController {
         }catch (Exception e){
             throw new BaseException("参数为空");
         }
+        log.info("LogStorageController.query.logQueryDTO:{}", JSON.toJSONString(logQueryDTO));
         LogInfoVO logInfoVO = logStorageService.queryLogs(logQueryDTO);
+        log.info("LogStorageController.query.logInfoVO:{}", JSON.toJSONString(logInfoVO));
         return Result.ok(logInfoVO);
     }
 

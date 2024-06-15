@@ -1,6 +1,6 @@
 package com.cl.collector.service.impl;
 
-import com.cl.collector.service.StatusCollectorService;
+import com.cl.collector.service.StatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
@@ -13,9 +13,9 @@ import java.util.Arrays;
  * @author: tressures
  * @date: 2024/5/26
  */
-@Service("statusCollectorService")
+@Service("statusService")
 @Slf4j
-public class StatusCollectorServiceImpl implements StatusCollectorService {
+public class StatusServiceImpl implements StatusService {
 
     @Override
     public Double getCpuUsage() throws IOException {

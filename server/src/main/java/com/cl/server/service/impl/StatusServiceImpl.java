@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.util.StringUtils;
-
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;

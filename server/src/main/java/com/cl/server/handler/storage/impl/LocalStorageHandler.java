@@ -1,6 +1,5 @@
 package com.cl.server.handler.storage.impl;
 
-
 import com.cl.server.pojo.DTO.LogInfoDTO;
 import com.cl.server.pojo.DTO.LogQueryDTO;
 import com.cl.server.pojo.VO.LogInfoVO;
@@ -8,7 +7,6 @@ import com.cl.server.enums.StorageTypeEnum;
 import com.cl.server.handler.storage.StorageTypeHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +20,7 @@ import java.util.List;
 @Slf4j
 public class LocalStorageHandler implements StorageTypeHandler {
 
-    private static final String PATH = "/data/statuslogs/";
+    private static final String PATH = "/data/logs/";
 
     @Override
     public StorageTypeEnum getHandlerType() {
@@ -49,6 +47,7 @@ public class LocalStorageHandler implements StorageTypeHandler {
 
     @Override
     public LogInfoVO query(LogQueryDTO logQueryDTO) {
+        LogInfoVO logInfoVO = new LogInfoVO();
         String[] parts = logQueryDTO.getFile().split(File.separator);
         String fileName = parts[parts.length - 1];
         List<String> logs = new ArrayList<>();
@@ -61,7 +60,6 @@ public class LocalStorageHandler implements StorageTypeHandler {
         } catch (IOException e) {
             log.info("LocalStorageHandler.query.filePath.{}.error:{}", PATH + fileName, e.getMessage());
         }
-        LogInfoVO logInfoVO = new LogInfoVO();
         logInfoVO.setHostname(logQueryDTO.getHostname());
         logInfoVO.setFile(logQueryDTO.getFile());
         logInfoVO.setLogs(logs);

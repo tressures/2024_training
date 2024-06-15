@@ -11,8 +11,8 @@ import com.cl.server.pojo.VO.LogInfoVO;
 import com.cl.server.enums.StorageTypeEnum;
 import com.cl.server.handler.storage.StorageTypeHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
-
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -66,6 +66,8 @@ public class MysqlStorageHandler implements StorageTypeHandler {
     @Override
     public LogInfoVO query(LogQueryDTO logQueryDTO) {
         LogInfoVO logInfoVO = new LogInfoVO();
+        logInfoVO.setHostname(logQueryDTO.getHostname());
+        logInfoVO.setFile(logQueryDTO.getFile());
         LogAddress logAddress = new LogAddress();
         logAddress.setHostName(logQueryDTO.getHostname());
         logAddress.setFile(logQueryDTO.getFile());
@@ -74,13 +76,14 @@ public class MysqlStorageHandler implements StorageTypeHandler {
         LogInfo logInfo = new LogInfo();
         logInfo.setLogAddressId(addressId);
         List<LogInfo> logInfos = logInfoDao.queryAllByLimit(logInfo);
+        if(CollectionUtils.isEmpty(logInfos)){
+            return logInfoVO;
+        }
         //按日志插入时间大小降序排序
         List<String> logs = logInfos.stream()
                 .sorted(Comparator.comparing(LogInfo::getCreateTime).reversed())
                 .map(LogInfo::getInfo)
                 .collect(Collectors.toList());
-        logInfoVO.setHostname(logAddress.getHostName());
-        logInfoVO.setFile(logAddress.getFile());
         logInfoVO.setLogs(logs);
         return logInfoVO;
     }

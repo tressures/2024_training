@@ -9,7 +9,6 @@ import com.cl.server.handler.storage.StorageTypeHandlerFactory;
 import com.cl.server.service.LogStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.Resource;
 import java.util.List;
 /**
