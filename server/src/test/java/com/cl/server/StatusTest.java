@@ -51,10 +51,10 @@ public class StatusTest {
     @Test
     public void queryTest(){
         StatusQueryDTO statusQueryDTO = new StatusQueryDTO();
-        statusQueryDTO.setEndpoint("my-computer");
+        statusQueryDTO.setEndpoint("lavm-7lafj3paqa");
         statusQueryDTO.setMetric("cpu.used.percent");
-        statusQueryDTO.setStart_ts(1715765640L);
-        statusQueryDTO.setEnd_ts(1715765760L);
+        statusQueryDTO.setStart_ts(1718434016L);
+        statusQueryDTO.setEnd_ts(1718517372L);
         List<StatusResp> statusRespList =statusService.queryMetrics(statusQueryDTO);
         log.info("logInfoVO:{}", JSON.toJSONString(statusRespList));
     }

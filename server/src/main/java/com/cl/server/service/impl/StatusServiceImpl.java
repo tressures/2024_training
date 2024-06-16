@@ -81,23 +81,20 @@ public class StatusServiceImpl implements StatusService {
             //查Redis
             String key = redisUtil.buildKey(statusQueryDTO.getEndpoint()+statusQueryDTO.getMetric());
             Set<String> members = redisUtil.rangeByScore(key,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
-            Long timeEnd=Long.MIN_VALUE;
+            Long timeStar = Long.MAX_VALUE;
+            Long timeEnd = Long.MIN_VALUE;
             if(CollectionUtils.isNotEmpty(members)){
                 //包装data
                 for(String item : members){
                     Values values = decorate(item);
                     valueList.add(values);
-                    //找出Redis中最老的时间
-                    if(timeEnd< values.getTimeStamp()) timeEnd= values.getTimeStamp();
+                    //找出Redis没有的元素时间
+                    if(timeEnd < values.getTimeStamp()) timeEnd = values.getTimeStamp();
+                    if(timeStar > values.getTimeStamp()) timeStar = values.getTimeStamp();
                 }
             }
-            //先查出Redis中符合的数据，再根据Redis最早的数据时间查数据库里这个时间之前所有数据
-            if(timeEnd==Long.MIN_VALUE){
-                timeEnd = statusQueryDTO.getEnd_ts();
-            }
             //查数据库
-            List<Status> statusList = statusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
-                    ,statusQueryDTO.getStart_ts(),timeEnd);
+            List<Status> statusList = queryFromMysql(statusQueryDTO, timeStar, timeEnd);
             if(CollectionUtils.isNotEmpty(statusList)) {
                 //包装data
                 List<Values> values = statusList.stream().map(item -> {
@@ -107,10 +104,10 @@ public class StatusServiceImpl implements StatusService {
                     return value;
                 }).collect(Collectors.toList());
                 valueList.addAll(values);
-                statusResp.setMetric(statusQueryDTO.getMetric());
-                statusResp.setValues(valueList);
-                statusRespList.add(statusResp);
-                }
+            }
+            statusResp.setMetric(statusQueryDTO.getMetric());
+            statusResp.setValues(valueList);
+            statusRespList.add(statusResp);
             log.info("CpuStatusServiceImpl.queryMetrics.statusRespList:{}", JSON.toJSONString(statusRespList));
             return statusRespList;
             //查全部类型
@@ -119,11 +116,13 @@ public class StatusServiceImpl implements StatusService {
             StatusResp memStatusResp = new StatusResp();
             List<Values> cpuValueList = new ArrayList<>();
             List<Values> memValueList = new ArrayList<>();
+            //查Redis
             String cpukey = redisUtil.buildKey(statusQueryDTO.getEndpoint()+"cpu.used.percent");
             String memkey = redisUtil.buildKey(statusQueryDTO.getEndpoint()+"mem.used.percent");
             Set<String> cpuMembers = redisUtil.rangeByScore(cpukey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
             Set<String> memMembers = redisUtil.rangeByScore(memkey,statusQueryDTO.getStart_ts(),statusQueryDTO.getEnd_ts());
-            Long timeEnd=Long.MIN_VALUE;
+            Long timeStar = Long.MAX_VALUE;
+            Long timeEnd = Long.MIN_VALUE;
             if(CollectionUtils.isNotEmpty(cpuMembers)&&CollectionUtils.isNotEmpty(memMembers)){
                 //包装data
                 for(String item : cpuMembers){
@@ -133,17 +132,13 @@ public class StatusServiceImpl implements StatusService {
                 for(String item : memMembers){
                     Values values = decorate(item);
                     memValueList.add(values);
-                    //找出Redis中最老的时间
-                    if(timeEnd<values.getTimeStamp()) timeEnd=values.getTimeStamp();
+                    //找出Redis没有的元素时间
+                    if(timeEnd < values.getTimeStamp()) timeEnd = values.getTimeStamp();
+                    if(timeStar > values.getTimeStamp()) timeStar = values.getTimeStamp();
                 }
             }
-            //先查出Redis中符合的数据，再根据Redis最早的数据时间查数据库里这个时间之前所有数据
-            if(timeEnd==Long.MIN_VALUE){
-                timeEnd = statusQueryDTO.getEnd_ts();
-            }
             //查数据库
-            List<Status> statusList = statusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
-                    ,statusQueryDTO.getStart_ts(),timeEnd);
+            List<Status> statusList = queryFromMysql(statusQueryDTO, timeStar, timeEnd);
             if(CollectionUtils.isNotEmpty(statusList)) {
                 //根据指标分组
                 Map<String,List<Status>> map = statusList.stream()
@@ -159,30 +154,41 @@ public class StatusServiceImpl implements StatusService {
                     }).collect(Collectors.toList());
                     if("cpu.used.percent".equals(key)){
                         cpuValueList.addAll(values);
-                        cpuStatusResp.setMetric("cpu.used.percent");
-                        cpuStatusResp.setValues(cpuValueList);
-                        statusRespList.add(cpuStatusResp);
                     }else{
                         memValueList.addAll(values);
-                        memStatusResp.setMetric("mem.used.percent");
-                        memStatusResp.setValues(memValueList);
-                        statusRespList.add(memStatusResp);
                     }
                 }
             }
+            cpuStatusResp.setMetric("cpu.used.percent");
+            cpuStatusResp.setValues(cpuValueList);
+            memStatusResp.setMetric("mem.used.percent");
+            memStatusResp.setValues(memValueList);
+            statusRespList.add(cpuStatusResp);
+            statusRespList.add(memStatusResp);
             log.info("CpuStatusServiceImpl.queryMetrics.statusRespList:{}", JSON.toJSONString(statusRespList));
             return statusRespList;
         }
     }
 
+    private List<Status> queryFromMysql(StatusQueryDTO statusQueryDTO, Long timeStar, Long timeEnd) {
+        List<Status> statusList = new ArrayList<>();
+        if(timeStar > statusQueryDTO.getStart_ts()){
+            List<Status> starList = statusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
+                    ,statusQueryDTO.getStart_ts(),timeStar);
+            statusList.addAll(starList);
+        }
+        if(timeEnd < statusQueryDTO.getEnd_ts()){
+            List<Status> endList = statusDao.queryAllByTimeStamp(statusQueryDTO.getEndpoint(),statusQueryDTO.getMetric()
+                    ,timeEnd,statusQueryDTO.getEnd_ts());
+            statusList.addAll(endList);
+        }
+        return statusList;
+    }
+
     private Values decorate(String item){
         String[] parts = item.split(":");
-        long timeStamp = Arrays.stream(parts[0].split(""))
-                .mapToLong(Long::parseLong)
-                .sum();
-        double value = Arrays.stream(parts[1].split("\\\\."))
-                .mapToDouble(Double::parseDouble)
-                .sum();
+        long timeStamp = Long.parseLong(parts[0]);
+        double value = Double.parseDouble(parts[1]);
         return new Values(timeStamp,value);
     }
 }

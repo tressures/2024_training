@@ -79,8 +79,8 @@ public class LogService {
             Path dir = Paths.get(path);
             // 创建新的WatchService
             WatchService watchService = FileSystems.getDefault().newWatchService();
-            // 注册监听事件
-            dir.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+            // 注册监听事件(要监听的文件的父目录以及指定监听的事件类型)
+            dir.getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             while (true) {
                 WatchKey key;
                 try {

@@ -43,7 +43,7 @@ public class LogTest {
 
     @Test
     public void queryTest(){
-        LogQueryDTO logQueryDTO = new LogQueryDTO("my-computer", "/home/work/a.log");
+        LogQueryDTO logQueryDTO = new LogQueryDTO("lavm-7lafj3paqa", "/home/work/a.log");
         LogInfoVO logInfoVO = logStorageService.queryLogs(logQueryDTO);
         log.info("logInfoVO:{}", JSON.toJSONString(logInfoVO));
     }

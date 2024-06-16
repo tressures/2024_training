@@ -1,6 +1,7 @@
 package com.cl.server.mapper;
 
 import com.cl.server.entity.LogInfo;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
 /**
@@ -9,6 +10,7 @@ import java.util.List;
  * @author makejava
  * @since 2024-06-06 17:28:12
  */
+@Mapper
 public interface LogInfoDao {
 
     /**

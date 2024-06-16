@@ -1,6 +1,7 @@
 package com.cl.server.mapper;
 
 import com.cl.server.entity.LogAddress;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  * @author makejava
  * @since 2024-06-06 17:27:24
  */
+@Mapper
 public interface LogAddressDao {
 
     /**
@@ -26,7 +28,7 @@ public interface LogAddressDao {
      * @param logAddress 查询条件
      * @return 实例对象
      */
-    int queryByLimit(LogAddress logAddress);
+    Integer queryByLimit(LogAddress logAddress);
 
     /**
      * 统计总行数

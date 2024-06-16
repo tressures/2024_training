@@ -46,12 +46,16 @@ public class MysqlStorageHandler implements StorageTypeHandler {
             LogAddress logAddress = new LogAddress();
             logAddress.setHostName(logInfoDTO.getHostname());
             logAddress.setFile(logInfoDTO.getFile());
-            logAddress.setCreateTime(LocalDateTime.now());
-            logAddress.setIsDelete(IsDeletedFlagEnum.UN_DELETED.getCode());
-            logAddressDao.insert(logAddress);
-            //执行完插入语句后，自动将自增id赋值给对象的属性id
-            int addressId = logAddress.getId();
-            //日志和日志路径地址的绑定
+            Integer addressId = logAddressDao.queryByLimit(logAddress);
+            //保证主机名+日志路径-->唯一性
+            if(addressId == null){
+                logAddress.setIsDelete(IsDeletedFlagEnum.UN_DELETED.getCode());
+                logAddress.setCreateTime(LocalDateTime.now());
+                logAddressDao.insert(logAddress);
+                //执行完插入语句后，自动将自增id赋值给对象的属性id
+                addressId = logAddress.getId();
+            }
+            //日志和log_address表的绑定
             for(String log : logInfoDTO.getLogs()) {
                 LogInfo logInfo = new LogInfo();
                 logInfo.setLogAddressId(addressId);
