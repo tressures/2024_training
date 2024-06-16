@@ -126,6 +126,7 @@ public class LogService {
             List<String> logs = new ArrayList<>();
             //读取新增的内容
             while((line = file.readLine()) != null){
+                line = line.replaceAll("^\\n+|\\n+$", "");
                 logs.add(line);
             }
             //更新文件指针
