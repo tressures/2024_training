@@ -144,7 +144,7 @@ public class LogService {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("hostname",hostname);
         jsonObject.put("file",path.toString());
-        jsonObject.put("logs",logs.toString());
+        jsonObject.put("logs",logs);
         logInfos.add(jsonObject);
         reportService.report(logInfos,TO_SERVER_URL);
     }
