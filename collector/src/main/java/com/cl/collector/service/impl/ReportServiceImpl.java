@@ -45,7 +45,7 @@ public class ReportServiceImpl implements ReportService {
                     log.info("ReportServiceImpl.report.response:{}", JSON.toJSONString(response));
                 }
             } else {
-                log.info("ReportServiceImpl.report.response.message:{}", conn.getResponseMessage());
+                log.info("ReportServiceImpl.report.response.error.message:{}", conn.getResponseMessage());
             }
         }catch (IOException e) {
             e.printStackTrace();

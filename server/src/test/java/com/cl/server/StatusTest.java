@@ -51,7 +51,7 @@ public class StatusTest {
     @Test
     public void queryTest(){
         StatusQueryDTO statusQueryDTO = new StatusQueryDTO();
-        statusQueryDTO.setEndpoint("lavm-7lafj3paqa");
+        statusQueryDTO.setEndpoint("my-computer");
         statusQueryDTO.setMetric("cpu.used.percent");
         statusQueryDTO.setStart_ts(1718434016L);
         statusQueryDTO.setEnd_ts(1718517372L);
